@@ -6,6 +6,7 @@ import cv2
 import torch
 import torch.backends.cudnn as cudnn
 import yaml
+from albumentations import augmentations
 from albumentations.augmentations import transforms
 from albumentations.core.composition import Compose
 from sklearn.model_selection import train_test_split
@@ -60,7 +61,7 @@ def main():
     model.eval()
 
     val_transform = Compose([
-        transforms.Resize(config['input_h'], config['input_w']),
+        augmentations.Resize(config['input_h'], config['input_w']),
         transforms.Normalize(),
     ])
 
