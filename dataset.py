@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import torch
 import torch.utils.data
-
+from albumentations.augmentations import transforms
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, img_ids, img_dir, mask_dir, img_ext, mask_ext, num_classes, transform=None):
@@ -67,10 +67,10 @@ class Dataset(torch.utils.data.Dataset):
             augmented = self.transform(image=img, mask=mask)
             img = augmented['image']
             mask = augmented['mask']
-        
-        img = img.astype('float32') / 255
-        img = img.transpose(2, 0, 1)
+        if self.transform and not any(isinstance(t, transforms.Normalize) for t in self.transform):
+            img = img.astype('float32') / 255
         mask = mask.astype('float32') / 255
+        img = img.transpose(2, 0, 1)
         mask = mask.transpose(2, 0, 1)
         
         return img, mask, {'img_id': img_id}
