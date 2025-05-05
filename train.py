@@ -102,7 +102,7 @@ def parse_args():
     return config
 
 
-def train(config, train_loader, model, criterion, optimizer):
+def train(config, train_loader, model, criterion, optimizer, device):
     avg_meters = {'loss': AverageMeter(),
                   'iou': AverageMeter()}
 
@@ -110,8 +110,8 @@ def train(config, train_loader, model, criterion, optimizer):
 
     pbar = tqdm(total=len(train_loader))
     for input, target, _ in train_loader:
-        input = input.cuda()
-        target = target.cuda()
+        input = input.to(device)
+        target = target.to(device)
 
         # compute output
         if config['deep_supervision']:
@@ -146,7 +146,7 @@ def train(config, train_loader, model, criterion, optimizer):
                         ('iou', avg_meters['iou'].avg)])
 
 
-def validate(config, val_loader, model, criterion):
+def validate(config, val_loader, model, criterion, device):
     avg_meters = {'loss': AverageMeter(),
                   'iou': AverageMeter()}
 
@@ -156,8 +156,8 @@ def validate(config, val_loader, model, criterion):
     with torch.no_grad():
         pbar = tqdm(total=len(val_loader))
         for input, target, _ in val_loader:
-            input = input.cuda()
-            target = target.cuda()
+            input = input.to(device)
+            target = target.to(device)
 
             # compute output
             if config['deep_supervision']:
@@ -189,6 +189,7 @@ def validate(config, val_loader, model, criterion):
 
 def main():
     config = vars(parse_args())
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     if config['name'] is None:
         if config['deep_supervision']:
@@ -219,7 +220,7 @@ def main():
                                            config['input_channels'],
                                            config['deep_supervision'])
 
-    model = model.cuda()
+    model = model.to(device)
 
     params = filter(lambda p: p.requires_grad, model.parameters())
     if config['optimizer'] == 'Adam':
@@ -311,9 +312,9 @@ def main():
         print('Epoch [%d/%d]' % (epoch, config['epochs']))
 
         # train for one epoch
-        train_log = train(config, train_loader, model, criterion, optimizer)
+        train_log = train(config, train_loader, model, criterion, optimizer, device)
         # evaluate on validation set
-        val_log = validate(config, val_loader, model, criterion)
+        val_log = validate(config, val_loader, model, criterion, device)
 
         if config['scheduler'] == 'CosineAnnealingLR':
             scheduler.step()

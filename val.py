@@ -31,6 +31,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     with open('models/%s/config.yml' % args.name, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -48,7 +49,7 @@ def main():
                                            config['input_channels'],
                                            config['deep_supervision'])
 
-    model = model.cuda()
+    model = model.to(device)
 
     # Data loading code
     img_ids = glob(os.path.join('inputs', config['dataset'], 'images', '*' + config['img_ext']))
@@ -86,8 +87,8 @@ def main():
         os.makedirs(os.path.join('outputs', config['name'], str(c)), exist_ok=True)
     with torch.no_grad():
         for input, target, meta in tqdm(val_loader, total=len(val_loader)):
-            input = input.cuda()
-            target = target.cuda()
+            input = input.to(device)
+            target = target.to(device)
 
             # compute output
             if config['deep_supervision']:
