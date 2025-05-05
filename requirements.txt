@@ -1,1 +1,7 @@
-albumentations
+numpy<2
+albumentations==2.0.6
+torch==2.2.2
+torchvision==0.17.2
+tqdm
+pandas
+scikit-learn
